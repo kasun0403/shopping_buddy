@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping_buddy/provider/app_provider.dart';
-import 'login_screen.dart';
+import 'package:shopping_buddy/provider/authentication_provider.dart';
+import 'package:shopping_buddy/provider/hive_provider.dart';
+import 'authentication/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -143,10 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Add the selected or custom item to the list
                 final customGrocery = groceryController.text.trim();
                 if (selectedGrocery != null) {
-                  Provider.of<AppProvider>(context, listen: false)
+                  Provider.of<HiveProvider>(context, listen: false)
                       .addGroceryItem(selectedGrocery!);
                 } else if (customGrocery.isNotEmpty) {
-                  Provider.of<AppProvider>(context, listen: false)
+                  Provider.of<HiveProvider>(context, listen: false)
                       .addGroceryItem(customGrocery);
                 }
                 Navigator.of(context).pop();
@@ -171,19 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Save Permanently'),
         content: const Text('Do you want to save good list permanently?'),
         actions: [
-          // TextButton(
-          //   onPressed: () {
-          //     Navigator.of(context).pop();
-          //     // Save temporarily
-          //     List<String> goodsList =
-          //         Provider.of<AppProvider>(context, listen: false).goodsList;
-          //     Provider.of<AppProvider>(context, listen: false)
-          //         .saveTemporarily(goodsList);
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //         const SnackBar(content: Text('Saved Temporarily!')));
-          //   },
-          //   child: const Text('Save Temporarily'),
-          // ),
           TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -192,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 "NO.",
                 style: TextStyle(color: Colors.red),
               )),
-
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -203,9 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.of(context).pop();
               bool isLoggedIn =
-                  Provider.of<AppProvider>(context, listen: false).isLoggedIn;
+                  Provider.of<AuthenticationProvider>(context, listen: false)
+                      .isLoggedIn;
               if (isLoggedIn) {
-                // Save permanently (Implement logic here)
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Your Item list Saved Permanently!')));
               } else {
@@ -231,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // Load data from Hive when the screen initializes
-    Provider.of<AppProvider>(context, listen: false).loadGoodsFromHive();
+    Provider.of<HiveProvider>(context, listen: false).loadGoodsFromHive();
   }
 
   @override
@@ -245,6 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
         ),
         actions: [
@@ -253,10 +241,10 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => _showAddGroceryDialog(context),
             child: Row(
               children: [
-                Image.asset("assets/tomato.png",
+                Image.asset("assets/images/tomato.png",
                     fit: BoxFit.scaleDown, height: 30),
                 const Text(
-                  'Add Grocery',
+                  'Add Groceries',
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w700,
@@ -267,7 +255,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              Provider.of<AuthenticationProvider>(context, listen: false)
+                  .logout();
+            },
           ),
           const SizedBox(
             width: 16,
@@ -278,12 +269,12 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Display the grocery list
           Expanded(
-            child: Consumer<AppProvider>(
-              builder: (context, appProvider, child) {
-                return appProvider.goodsList.isEmpty
+            child: Consumer<HiveProvider>(
+              builder: (context, hiveProvider, child) {
+                return hiveProvider.goodsList.isEmpty
                     ? const Center(child: Text('No groceries added yet.'))
                     : ListView.builder(
-                        itemCount: appProvider.goodsList.length,
+                        itemCount: hiveProvider.goodsList.length,
                         itemBuilder: (context, index) {
                           return Container(
                             margin: const EdgeInsets.symmetric(
@@ -295,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: ListTile(
                               tileColor: Colors.transparent,
                               title: Text(
-                                appProvider.goodsList[index],
+                                hiveProvider.goodsList[index],
                                 style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w600),
@@ -307,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 onPressed: () {
                                   // Remove the item from the list
-                                  appProvider.removeGroceryItem(index);
+                                  hiveProvider.removeGroceryItem(index);
                                 },
                               ),
                             ),

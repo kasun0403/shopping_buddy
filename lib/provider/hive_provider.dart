@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-class AppProvider with ChangeNotifier {
+class HiveProvider with ChangeNotifier {
   List<String> _goodsList = [];
-  bool _isLoggedIn = false;
 
   // Getter for goodsList
   List<String> get goodsList => _goodsList;
-
-  // Getter for login status
-  bool get isLoggedIn => _isLoggedIn;
-
-  // Set login status
-  void setLoginStatus(bool status) {
-    _isLoggedIn = status;
-    notifyListeners();
-  }
 
   // Load the grocery list from Hive
   Future<void> loadGoodsFromHive() async {
