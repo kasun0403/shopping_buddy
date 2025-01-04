@@ -1,8 +1,11 @@
 import 'dart:convert';
-
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+// import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
 import 'package:shopping_buddy/provider/hive_provider.dart';
 import 'authentication/login_screen.dart';
@@ -16,7 +19,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   TextEditingController countController = TextEditingController();
+  final GlobalKey _globalKey = GlobalKey();
   int itemCount = 0;
+  List<String> goodList = [];
+
   void _showAddGroceryDialog(BuildContext context) async {
     TextEditingController groceryController = TextEditingController();
     String? selectedGrocery;
@@ -224,6 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.red,
         elevation: 2,
@@ -269,43 +276,81 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Display the grocery list
           Expanded(
-            child: Consumer<HiveProvider>(
-              builder: (context, hiveProvider, child) {
-                return hiveProvider.goodsList.isEmpty
-                    ? const Center(child: Text('No groceries added yet.'))
-                    : ListView.builder(
-                        itemCount: hiveProvider.goodsList.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2.5),
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent.withOpacity(0.6),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ListTile(
-                              tileColor: Colors.transparent,
-                              title: Text(
-                                hiveProvider.goodsList[index],
-                                style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600),
+            child: RepaintBoundary(
+              key: _globalKey,
+              child: Consumer<HiveProvider>(
+                builder: (context, hiveProvider, child) {
+                  return hiveProvider.goodsList.isEmpty
+                      ? const Center(child: Text('No groceries added yet.'))
+                      : ListView.builder(
+                          itemCount: hiveProvider.goodsList.length,
+                          itemBuilder: (context, index) {
+                            goodList = hiveProvider.goodsList;
+                            return Container(
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.remove_circle,
-                                  color: Colors.red,
+                              child: ListTile(
+                                tileColor: Colors.transparent,
+                                title: Text(
+                                  hiveProvider.goodsList[index],
+                                  style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w600),
                                 ),
-                                onPressed: () {
-                                  // Remove the item from the list
-                                  hiveProvider.removeGroceryItem(index);
-                                },
+                                trailing: IconButton(
+                                  icon: const Icon(
+                                    Icons.remove_circle,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    // Remove the item from the list
+                                    hiveProvider.removeGroceryItem(index);
+                                  },
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      );
+                            );
+                          },
+                        );
+                },
+              ),
+            ),
+          ),
+          Container(
+            width: MediaQuery.of(context).size.width / 2,
+            color: Colors.transparent,
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                String title = "**Grocery List**".toUpperCase();
+                String grocery = "$title\n\n${goodList.join('\n')}";
+
+                try {
+                  ByteData byteData =
+                      await rootBundle.load('assets/images/logo1.png');
+
+                  // Convert ByteData to Uint8List
+                  final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+                  // Save image to temporary directory
+                  final directory = await getTemporaryDirectory();
+                  final path = "${directory.path}/grocery_lists.png";
+                  File(path).writeAsBytesSync(pngBytes);
+
+                  // Share the image and text
+                  await Share.shareXFiles([XFile(path)], text: grocery);
+                  // await Share.share(
+                  //   grocery, // The list of items as text
+                  // );
+                } catch (e) {
+                  print("Error sharing: $e");
+                }
               },
+              icon: const Icon(Icons.share),
+              label: const Text('Share Grocery List'),
             ),
           ),
         ],
