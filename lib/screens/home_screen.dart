@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shopping_buddy/models/grocery_item.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
 import 'package:shopping_buddy/provider/hive_provider.dart';
 import 'authentication/login_screen.dart';
@@ -19,152 +20,155 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   TextEditingController countController = TextEditingController();
-  final GlobalKey _globalKey = GlobalKey();
+
   int itemCount = 0;
-  List<String> goodList = [];
+  List<GroceryItem> goodList = [];
 
   void _showAddGroceryDialog(BuildContext context) async {
     TextEditingController groceryController = TextEditingController();
-    String? selectedGrocery;
-    List<String> goodsList = [];
-
-    // Load the JSON file
-    final String response =
-        await rootBundle.loadString('assets/json/goods.json');
-    goodsList = List<String>.from(json.decode(response));
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            'Add Grocery',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Select from the list or add a custom item:',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+        String? errorMessage;
+        final TextEditingController countController = TextEditingController();
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                'Add Grocery',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
                 ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  value: selectedGrocery,
-                  isExpanded: true,
-                  items: goodsList.map((String item) {
-                    return DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(item),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    selectedGrocery = value;
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Enter the item name',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 10),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: groceryController,
+                      cursorColor: Colors.red,
+                      decoration: InputDecoration(
+                        hintText: 'Enter grocery item',
+                        hintStyle:
+                            TextStyle(color: Colors.red.withOpacity(0.7)),
+                        // errorText: errorMessage,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              color: Colors.red), // Border color
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              color: Colors.red), // Focused border color
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              color: Colors.red), // Enabled border color
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: countController,
+                      keyboardType: TextInputType.number,
+                      cursorColor: Colors.red,
+                      decoration: InputDecoration(
+                        errorText: errorMessage,
+                        hintText: 'Enter item count',
+                        hintStyle:
+                            TextStyle(color: Colors.red.withOpacity(0.7)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
                   },
-                  decoration: InputDecoration(
-                    labelText: 'Select item',
-                    labelStyle: TextStyle(color: Colors.red.withOpacity(0.7)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          const BorderSide(color: Colors.red), // Border color
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Colors.red), // Focused border color
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Colors.red), // Enabled border color
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                        color: Colors.grey, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 16.0),
-                const Text(
-                  'Or enter a custom item:',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: groceryController,
-                  cursorColor: Colors.red,
-                  decoration: InputDecoration(
-                    hintText: 'Enter grocery item',
-                    hintStyle: TextStyle(color: Colors.red.withOpacity(0.7)),
-                    border: OutlineInputBorder(
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          const BorderSide(color: Colors.red), // Border color
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Colors.red), // Focused border color
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Colors.red), // Enabled border color
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
+                  ),
+                  onPressed: () {
+                    final customGrocery = groceryController.text.trim();
+                    final countText = countController.text.trim();
+                    final groceryItem = GroceryItem(
+                      name: customGrocery,
+                      count: double.tryParse(countText) ?? 0,
+                    );
+                    var groceryListItem =
+                        Provider.of<GroceryProvider>(context, listen: false)
+                            .groceryList;
+                    if (groceryListItem
+                        .any((item) => item.name == customGrocery)) {
+                      setState(() {
+                        errorMessage = 'Item already added to the list.';
+                      });
+                    } else if (customGrocery.isNotEmpty &&
+                        countText.isNotEmpty) {
+                      Provider.of<GroceryProvider>(context, listen: false)
+                          .addGroceryItem(groceryItem);
+                      Navigator.of(context).pop();
+                    } else {
+                      setState(() {
+                        errorMessage = 'Please enter all fields.';
+                      });
+                    }
+                  },
+                  child: const Text(
+                    'Add',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cancel',
-                style:
-                    TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                // Add the selected or custom item to the list
-                final customGrocery = groceryController.text.trim();
-                if (selectedGrocery != null) {
-                  Provider.of<HiveProvider>(context, listen: false)
-                      .addGroceryItem(selectedGrocery!);
-                } else if (customGrocery.isNotEmpty) {
-                  Provider.of<HiveProvider>(context, listen: false)
-                      .addGroceryItem(customGrocery);
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Add',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -224,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // Load data from Hive when the screen initializes
-    Provider.of<HiveProvider>(context, listen: false).loadGoodsFromHive();
+    Provider.of<GroceryProvider>(context, listen: false)
+        .loadGroceryListFromHive();
   }
 
   @override
@@ -276,47 +281,89 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Display the grocery list
           Expanded(
-            child: RepaintBoundary(
-              key: _globalKey,
-              child: Consumer<HiveProvider>(
-                builder: (context, hiveProvider, child) {
-                  return hiveProvider.goodsList.isEmpty
-                      ? const Center(child: Text('No groceries added yet.'))
-                      : ListView.builder(
-                          itemCount: hiveProvider.goodsList.length,
-                          itemBuilder: (context, index) {
-                            goodList = hiveProvider.goodsList;
-                            return Container(
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2.5),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withOpacity(0.6),
-                                borderRadius: BorderRadius.circular(10),
+            child: Consumer<GroceryProvider>(
+              builder: (context, hiveProvider, child) {
+                return hiveProvider.groceryList.isEmpty
+                    ? const Center(child: Text('No groceries added yet.'))
+                    : ListView.builder(
+                        itemCount: hiveProvider.groceryList.length,
+                        itemBuilder: (context, index) {
+                          goodList = hiveProvider.groceryList;
+                          bool isCheck =
+                              hiveProvider.groceryList[index].isCheck;
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: isCheck
+                                  ? Colors.green.withOpacity(0.6)
+                                  : Colors.redAccent.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              onTap: () {
+                                hiveProvider.toggleCheck(index);
+                              },
+                              tileColor: Colors.transparent,
+                              title: Text(
+                                hiveProvider.groceryList[index].name,
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600),
                               ),
-                              child: ListTile(
-                                tileColor: Colors.transparent,
-                                title: Text(
-                                  hiveProvider.goodsList[index],
-                                  style: const TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(
-                                    Icons.remove_circle,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    // Remove the item from the list
-                                    hiveProvider.removeGroceryItem(index);
-                                  },
+                              subtitle: Text(
+                                ("item count: ${hiveProvider.groceryList[index].count.toStringAsFixed(0)}"),
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              trailing: SizedBox(
+                                width: 80,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    isCheck
+                                        ? Container(
+                                            padding: const EdgeInsets.all(5),
+                                            decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(100)),
+                                            child: const Icon(
+                                              Icons.check_circle,
+                                              color: Colors.green, // Tick icon
+                                            ),
+                                          )
+                                        : const SizedBox(
+                                            width: 30,
+                                          ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        // Remove the item from the list
+                                        hiveProvider.removeGroceryItem(index);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(100)),
+                                        // width: 15,
+                                        child: const Icon(
+                                          Icons.delete_sharp,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                        );
-                },
-              ),
+                            ),
+                          );
+                        },
+                      );
+              },
             ),
           ),
           Container(
@@ -326,7 +373,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ElevatedButton.icon(
               onPressed: () async {
                 String title = "**Grocery List**".toUpperCase();
-                String grocery = "$title\n\n${goodList.join('\n')}";
+
+                String grocery =
+                    "$title\n\n${goodList.map((item) => "${item.name} - items: ${item.count.toStringAsFixed(0)}").join('\n')}";
 
                 try {
                   ByteData byteData =

@@ -1,44 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:shopping_buddy/models/grocery_item.dart';
+import 'package:shopping_buddy/services/grocery_hive_service.dart';
 
-class HiveProvider with ChangeNotifier {
-  List<String> _goodsList = [];
+class GroceryProvider with ChangeNotifier {
+  final GroceryHiveService _hiveService = GroceryHiveService();
+  List<GroceryItem> _groceryList = [];
 
-  // Getter for goodsList
-  List<String> get goodsList => _goodsList;
+  List<GroceryItem> get groceryList => _groceryList;
 
-  // Load the grocery list from Hive
-  Future<void> loadGoodsFromHive() async {
-    var box = await Hive.openBox('groceryBox');
-    List<dynamic> storedGoods = box.get('goods', defaultValue: []);
-    _goodsList = List<String>.from(storedGoods);
+  Future<void> loadGroceryListFromHive() async {
+    _groceryList = await _hiveService.loadGroceryList();
     notifyListeners();
   }
 
-  // Save grocery list temporarily using Hive
-  Future<void> saveTemporarily(List<String> goodsList) async {
-    var box = await Hive.openBox('groceryBox');
-    await box.put('goods', goodsList);
+  Future<void> addGroceryItem(GroceryItem item) async {
+    await _hiveService.addGroceryItem(item);
+    await loadGroceryListFromHive(); // Refresh list after adding
+  }
+
+  Future<void> updateGroceryItem(int index, double count, bool isCheck) async {
+    var existingItem = _groceryList[index];
+    var updatedItem = GroceryItem(
+      name: existingItem.name,
+      count: count,
+      isCheck: isCheck,
+    );
+    await _hiveService.updateGroceryItem(index, updatedItem);
+    await loadGroceryListFromHive(); // Refresh list after updating
+  }
+
+  Future<void> removeGroceryItem(int index) async {
+    await _hiveService.removeGroceryItem(index);
+    await loadGroceryListFromHive(); // Refresh list after removing
+  }
+
+  Future<void> clearGroceryList() async {
+    await _hiveService.clearGroceryList();
+    _groceryList.clear();
     notifyListeners();
   }
 
-  // Add a new grocery item to the list
-  void addGroceryItem(String item) {
-    _goodsList.add(item);
-    _updateHive();
+  Future<void> toggleCheck(int index) async {
+    final item = groceryList[index];
+    final updatedItem = item.copyWith(
+      isCheck: !item.isCheck,
+    );
+    await _hiveService.updateGroceryItem(index, updatedItem);
+    groceryList[index] = updatedItem;
     notifyListeners();
-  }
-
-  // Remove a grocery item from the list
-  void removeGroceryItem(int index) {
-    _goodsList.removeAt(index);
-    _updateHive();
-    notifyListeners();
-  }
-
-  // Helper method to update the Hive box after any change in the list
-  Future<void> _updateHive() async {
-    var box = await Hive.openBox('groceryBox');
-    await box.put('goods', _goodsList); // Save the updated list to Hive
   }
 }
