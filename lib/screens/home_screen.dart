@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shopping_buddy/models/grocery_item.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
+import 'package:shopping_buddy/provider/firebase_provider.dart';
 import 'package:shopping_buddy/provider/hive_provider.dart';
 import 'package:shopping_buddy/screens/history_screen.dart';
 import 'authentication/login_screen.dart';
@@ -245,7 +246,14 @@ class _HomeScreenState extends State<HomeScreen> {
               bool isLoggedIn =
                   Provider.of<AuthenticationProvider>(context, listen: false)
                       .isLoggedIn;
+              print("$isLoggedIn");
               if (isLoggedIn) {
+                List<GroceryItem> groceryList =
+                    Provider.of<GroceryProvider>(context, listen: false)
+                        .groceryList;
+                Provider.of<FirebaseProvider>(context, listen: false)
+                    .addGroceryItemList(context, groceryList);
+
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Your Item list Saved Permanently!')));
               } else {
@@ -271,7 +279,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // Load data from Hive when the screen initializes
-    Provider.of<GroceryProvider>(context, listen: false).clearGroceryList();
+    Provider.of<GroceryProvider>(context, listen: false)
+        .loadGroceryListFromHive();
   }
 
   @override
@@ -470,9 +479,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Share the image and text
                       await Share.shareXFiles([XFile(path)], text: grocery);
-                      // await Share.share(
-                      //   grocery, // The list of items as text
-                      // );
                     } catch (e) {
                       print("Error sharing: $e");
                     }
@@ -495,11 +501,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () => _showSaveDialog(context), // Show the save dialog
-      //   tooltip: 'Save List',
-      //   child: const Icon(Icons.save),
-      // ),
     );
   }
 }

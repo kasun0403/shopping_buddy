@@ -12,7 +12,7 @@ class AuthenticationProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
-  User? get user => _user;
+  User? get getUser => _user;
 
   void setLogginStatus(bool status) {
     _isLoggedIn = status;
@@ -58,7 +58,9 @@ class AuthenticationProvider extends ChangeNotifier {
         return;
       }
       setLoadingStatus(true);
-      await _authService.signInWithEmailAndPassword(email, password);
+      User? user =
+          await _authService.signInWithEmailAndPassword(email, password);
+      setUser(user);
       setLogginStatus(true);
 
       Future.delayed(Duration.zero, () {

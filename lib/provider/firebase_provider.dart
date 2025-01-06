@@ -1,0 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_buddy/models/grocery_item.dart';
+import 'package:shopping_buddy/provider/authentication_provider.dart';
+import 'package:shopping_buddy/services/grocery_firebase_service.dart';
+
+class FirebaseProvider extends ChangeNotifier {
+  final GroceryFirebaseService _firebaseService = GroceryFirebaseService();
+  List<GroceryItem> _groceryList = [];
+
+  List<GroceryItem> get groceryList => _groceryList;
+
+  Future<void> addGroceryItemList(
+      BuildContext context, List<GroceryItem> item) async {
+    User? uid =
+        Provider.of<AuthenticationProvider>(context, listen: false).getUser;
+    await _firebaseService.saveGroceryList(context, item, uid!.uid);
+    print("+++++++++++++++++++++++++++++++++++Triger Firebase Provider");
+    notifyListeners();
+  }
+}

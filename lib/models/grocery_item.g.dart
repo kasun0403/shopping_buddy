@@ -21,13 +21,15 @@ class GroceryItemAdapter extends TypeAdapter<GroceryItem> {
       count: fields[1] as double,
       isCheck: fields[2] as bool,
       measurement: fields[3] as String,
+      title: fields[4] as String?,
+      createdDate: fields[5] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, GroceryItem obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -35,7 +37,11 @@ class GroceryItemAdapter extends TypeAdapter<GroceryItem> {
       ..writeByte(2)
       ..write(obj.isCheck)
       ..writeByte(3)
-      ..write(obj.measurement);
+      ..write(obj.measurement)
+      ..writeByte(4)
+      ..write(obj.title)
+      ..writeByte(5)
+      ..write(obj.createdDate);
   }
 
   @override

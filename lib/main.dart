@@ -4,6 +4,7 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
+import 'package:shopping_buddy/provider/firebase_provider.dart';
 import 'package:shopping_buddy/screens/spash_screen.dart';
 import 'package:shopping_buddy/utils/hive_helper.dart';
 import 'package:shopping_buddy/utils/theme.dart';
@@ -22,6 +23,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => AuthenticationProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => FirebaseProvider(),
         )
       ],
       child: const MyApp(),
