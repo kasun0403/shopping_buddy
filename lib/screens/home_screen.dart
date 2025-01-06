@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shopping_buddy/models/grocery_item.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
 import 'package:shopping_buddy/provider/hive_provider.dart';
+import 'package:shopping_buddy/screens/history_screen.dart';
 import 'authentication/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,19 +19,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  TextEditingController countController = TextEditingController();
-
   int itemCount = 0;
   List<GroceryItem> goodList = [];
 
   void _showAddGroceryDialog(BuildContext context) async {
     TextEditingController groceryController = TextEditingController();
+    TextEditingController countController = TextEditingController();
 
+    String selectedMeasurement = 'KG';
+    List<String> measurements = ['KG', 'Packs', 'Liters', 'Units'];
     showDialog(
       context: context,
       builder: (BuildContext context) {
         String? errorMessage;
-        final TextEditingController countController = TextEditingController();
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Enter the item name',
+                      'Enter the item name and quantity',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 10),
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       controller: groceryController,
                       cursorColor: Colors.red,
                       decoration: InputDecoration(
-                        hintText: 'Enter grocery item',
+                        hintText: 'item name',
                         hintStyle:
                             TextStyle(color: Colors.red.withOpacity(0.7)),
                         // errorText: errorMessage,
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       cursorColor: Colors.red,
                       decoration: InputDecoration(
                         errorText: errorMessage,
-                        hintText: 'Enter item count',
+                        hintText: 'item quantity',
                         hintStyle:
                             TextStyle(color: Colors.red.withOpacity(0.7)),
                         border: OutlineInputBorder(
@@ -112,6 +112,48 @@ class _HomeScreenState extends State<HomeScreen> {
                           vertical: 10,
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: selectedMeasurement,
+                      decoration: InputDecoration(
+                        hintText: 'Select measurement',
+                        hintStyle:
+                            TextStyle(color: Colors.red.withOpacity(0.7)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                      ),
+                      items: measurements.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(
+                            value,
+                            style:
+                                TextStyle(color: Colors.red.withOpacity(0.7)),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedMeasurement = newValue!;
+                        });
+                      },
+                      dropdownColor:
+                          Colors.white, // Matches the dialog's background color
                     ),
                   ],
                 ),
@@ -140,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     final groceryItem = GroceryItem(
                       name: customGrocery,
                       count: double.tryParse(countText) ?? 0,
+                      measurement: selectedMeasurement,
                     );
                     var groceryListItem =
                         Provider.of<GroceryProvider>(context, listen: false)
@@ -228,8 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // Load data from Hive when the screen initializes
-    Provider.of<GroceryProvider>(context, listen: false)
-        .loadGroceryListFromHive();
+    Provider.of<GroceryProvider>(context, listen: false).clearGroceryList();
   }
 
   @override
@@ -253,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => _showAddGroceryDialog(context),
             child: Row(
               children: [
-                Image.asset("assets/images/tomato.png",
+                Image.asset("assets/images/logo1.png",
                     fit: BoxFit.scaleDown, height: 30),
                 const Text(
                   'Add Groceries',
@@ -312,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600),
                               ),
                               subtitle: Text(
-                                ("item count: ${hiveProvider.groceryList[index].count.toStringAsFixed(0)}"),
+                                ("item quantity: ${hiveProvider.groceryList[index].count.toStringAsFixed(0)} ${hiveProvider.groceryList[index].measurement}"),
                                 style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w600),
@@ -342,6 +384,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onTap: () {
                                         // Remove the item from the list
                                         hiveProvider.removeGroceryItem(index);
+                                        Get.snackbar(
+                                            "${hiveProvider.groceryList[index].name} Item Deleted",
+                                            "",
+                                            snackPosition:
+                                                SnackPosition.BOTTOM);
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(5),
@@ -366,49 +413,93 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
-          Container(
-            width: MediaQuery.of(context).size.width / 2,
-            color: Colors.transparent,
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                String title = "**Grocery List**".toUpperCase();
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Container(
+              //   // width: 50,
+              //   decoration: BoxDecoration(
+              //       color: Colors.red,
+              //       borderRadius: BorderRadius.circular(100)),
+              //   padding: const EdgeInsets.all(8),
+              //   margin: const EdgeInsets.all(8.0),
+              //   child: const Icon(
+              //     Icons.history,
+              //     size: 30,
+              //     color: Colors.white,
+              //   ),
+              // ),
+              Container(
+                width: MediaQuery.of(context).size.width / 3,
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HistoryScreen(),
+                        ));
+                  },
+                  icon: const Icon(Icons.history),
+                  label: const Text('History'),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width / 3,
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    String title = "**Grocery List**".toUpperCase();
 
-                String grocery =
-                    "$title\n\n${goodList.map((item) => "${item.name} - items: ${item.count.toStringAsFixed(0)}").join('\n')}";
+                    String grocery =
+                        "$title\n\n${goodList.map((item) => "${item.name} - items: ${item.count.toStringAsFixed(0)}").join('\n')}";
 
-                try {
-                  ByteData byteData =
-                      await rootBundle.load('assets/images/logo1.png');
+                    try {
+                      ByteData byteData =
+                          await rootBundle.load('assets/images/logo1.png');
 
-                  // Convert ByteData to Uint8List
-                  final Uint8List pngBytes = byteData.buffer.asUint8List();
+                      // Convert ByteData to Uint8List
+                      final Uint8List pngBytes = byteData.buffer.asUint8List();
 
-                  // Save image to temporary directory
-                  final directory = await getTemporaryDirectory();
-                  final path = "${directory.path}/grocery_lists.png";
-                  File(path).writeAsBytesSync(pngBytes);
+                      // Save image to temporary directory
+                      final directory = await getTemporaryDirectory();
+                      final path = "${directory.path}/grocery_lists.png";
+                      File(path).writeAsBytesSync(pngBytes);
 
-                  // Share the image and text
-                  await Share.shareXFiles([XFile(path)], text: grocery);
-                  // await Share.share(
-                  //   grocery, // The list of items as text
-                  // );
-                } catch (e) {
-                  print("Error sharing: $e");
-                }
-              },
-              icon: const Icon(Icons.share),
-              label: const Text('Share Grocery List'),
-            ),
+                      // Share the image and text
+                      await Share.shareXFiles([XFile(path)], text: grocery);
+                      // await Share.share(
+                      //   grocery, // The list of items as text
+                      // );
+                    } catch (e) {
+                      print("Error sharing: $e");
+                    }
+                  },
+                  icon: const Icon(Icons.share),
+                  label: const Text('Share'),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width / 3,
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton.icon(
+                  onPressed: () => _showSaveDialog(context),
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSaveDialog(context), // Show the save dialog
-        tooltip: 'Save List',
-        child: const Icon(Icons.save),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => _showSaveDialog(context), // Show the save dialog
+      //   tooltip: 'Save List',
+      //   child: const Icon(Icons.save),
+      // ),
     );
   }
 }

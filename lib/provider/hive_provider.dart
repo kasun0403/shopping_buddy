@@ -18,13 +18,14 @@ class GroceryProvider with ChangeNotifier {
     await loadGroceryListFromHive(); // Refresh list after adding
   }
 
-  Future<void> updateGroceryItem(int index, double count, bool isCheck) async {
+  Future<void> updateGroceryItem(
+      int index, double count, bool isCheck, String measurement) async {
     var existingItem = _groceryList[index];
     var updatedItem = GroceryItem(
-      name: existingItem.name,
-      count: count,
-      isCheck: isCheck,
-    );
+        name: existingItem.name,
+        count: count,
+        isCheck: isCheck,
+        measurement: measurement);
     await _hiveService.updateGroceryItem(index, updatedItem);
     await loadGroceryListFromHive(); // Refresh list after updating
   }

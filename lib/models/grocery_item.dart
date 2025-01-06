@@ -10,17 +10,23 @@ class GroceryItem {
   final double count;
   @HiveField(2)
   final bool isCheck;
+  @HiveField(3)
+  final String measurement;
 
   GroceryItem({
     required this.name,
     required this.count,
     this.isCheck = false,
+    required this.measurement,
   });
-  GroceryItem copyWith({String? name, double? count, bool? isCheck}) {
+
+  GroceryItem copyWith(
+      {String? name, double? count, bool? isCheck, String? measurement}) {
     return GroceryItem(
       name: name ?? this.name,
       count: count ?? this.count,
       isCheck: isCheck ?? this.isCheck,
+      measurement: measurement ?? this.measurement,
     );
   }
 }
