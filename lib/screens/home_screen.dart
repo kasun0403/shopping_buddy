@@ -246,7 +246,6 @@ class _HomeScreenState extends State<HomeScreen> {
               bool isLoggedIn =
                   Provider.of<AuthenticationProvider>(context, listen: false)
                       .isLoggedIn;
-              print("$isLoggedIn");
               if (isLoggedIn) {
                 List<GroceryItem> groceryList =
                     Provider.of<GroceryProvider>(context, listen: false)
@@ -293,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text(
           'SHOPPING BUDDY',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.w700,
             fontSize: 18,
           ),
@@ -317,10 +316,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
               Provider.of<AuthenticationProvider>(context, listen: false)
-                  .logout();
+                  .logout(context);
             },
           ),
           const SizedBox(

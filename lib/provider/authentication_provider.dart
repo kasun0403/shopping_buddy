@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_buddy/provider/hive_provider.dart';
 import 'package:shopping_buddy/screens/home_screen.dart';
 import 'package:shopping_buddy/services/authentication_service.dart';
 
@@ -29,10 +31,12 @@ class AuthenticationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void logout() async {
+  void logout(BuildContext context) async {
     _authService.signOut();
     setLogginStatus(false);
     setUser(null);
+    await Provider.of<GroceryProvider>(context, listen: false)
+        .loadGroceryListFromHive();
     Get.snackbar("User Logout Successfully", "",
         snackPosition: SnackPosition.BOTTOM);
     notifyListeners();

@@ -16,7 +16,15 @@ class FirebaseProvider extends ChangeNotifier {
     User? uid =
         Provider.of<AuthenticationProvider>(context, listen: false).getUser;
     await _firebaseService.saveGroceryList(context, item, uid!.uid);
-    print("+++++++++++++++++++++++++++++++++++Triger Firebase Provider");
     notifyListeners();
+  }
+
+  Future<Map<String, List<Map<String, dynamic>>>> fetchGroceryHistory(
+      BuildContext context) async {
+    User? uid =
+        Provider.of<AuthenticationProvider>(context, listen: false).getUser;
+    Map<String, List<Map<String, dynamic>>> groupedByDate =
+        await _firebaseService.fetchGroceryHistory(uid!.uid);
+    return groupedByDate;
   }
 }

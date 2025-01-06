@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
+import 'package:shopping_buddy/provider/firebase_provider.dart';
 import 'package:shopping_buddy/screens/authentication/login_screen.dart';
+import 'package:shopping_buddy/screens/history_data_screen.dart';
 
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
-  @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
-}
-
-class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +17,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: Colors.white,
           ),
           onPressed: () {
             Navigator.pop(context);
@@ -29,17 +26,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text(
           'HISTORY',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.w700,
             fontSize: 18,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
               Provider.of<AuthenticationProvider>(context, listen: false)
-                  .logout();
+                  .logout(context);
             },
           ),
           const SizedBox(
@@ -51,7 +48,73 @@ class _HistoryScreenState extends State<HistoryScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Provider.of<AuthenticationProvider>(context, listen: false).isLoggedIn
-              ? const SizedBox()
+              ? FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+                  future: Provider.of<FirebaseProvider>(context, listen: false)
+                      .fetchGroceryHistory(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                              decoration: const BoxDecoration(
+                                image: DecorationImage(
+                                  fit: BoxFit.scaleDown,
+                                  image: AssetImage(
+                                    "assets/images/logo1.png",
+                                  ),
+                                ),
+                              ),
+                              child: const CircularProgressIndicator(
+                                  color: Colors.redAccent)),
+                        ],
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (snapshot.hasData && snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No history found.'));
+                    }
+
+                    final history = snapshot.data!;
+
+                    return Expanded(
+                      child: ListView.builder(
+                        itemCount: history.keys.length,
+                        itemBuilder: (context, index) {
+                          final date = history.keys.elementAt(index);
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2.5),
+                            decoration: BoxDecoration(
+                                color: Colors.redAccent.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: ListTile(
+                              title: Text(
+                                date,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              tileColor: Colors.transparent,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => HistoryDataScreen(
+                                      date: date,
+                                      items: history[date]!,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                )
               : Center(
                   child: Column(
                     children: [
@@ -71,10 +134,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: ElevatedButton.icon(
                           onPressed: () async {
                             Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ));
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginScreen(),
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.login),
                           label: const Text('Log in'),
