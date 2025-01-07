@@ -31,18 +31,6 @@ class HistoryScreen extends StatelessWidget {
             fontSize: 18,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              Provider.of<AuthenticationProvider>(context, listen: false)
-                  .logout(context);
-            },
-          ),
-          const SizedBox(
-            width: 16,
-          )
-        ],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
