@@ -14,9 +14,14 @@ class FirebaseProvider extends ChangeNotifier {
 
   Future<void> addGroceryItemList(
       BuildContext context, List<GroceryItem> item) async {
-    User? uid =
-        Provider.of<AuthenticationProvider>(context, listen: false).getUser;
-    await _firebaseService.saveGroceryList(context, item, uid!.uid);
+    String? uid =
+        Provider.of<AuthenticationProvider>(context, listen: false).getUid;
+    print("++++++++++++${uid}");
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? prefuid = prefs.getString('uid');
+
+    await _firebaseService.saveGroceryList(context, item, prefuid);
     notifyListeners();
   }
 

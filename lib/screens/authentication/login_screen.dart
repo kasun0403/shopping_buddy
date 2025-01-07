@@ -18,28 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
 
-  bool isloading = false;
-
-  signIn() async {
-    final authProvider =
-        Provider.of<AuthenticationProvider>(context, listen: false);
-    await authProvider.signInWithEmailAndPassword(
-        context, email.text, password.text);
-  }
-
-  // googleLogin() async {
-  //   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-  //   final GoogleSignInAuthentication? googleAuth =
-  //       await googleUser?.authentication;
-
-  //   final credential = GoogleAuthProvider.credential(
-  //     accessToken: googleAuth?.accessToken,
-  //     idToken: googleAuth?.idToken,
-  //   );
-
-  //   await FirebaseAuth.instance.signInWithCredential(credential);
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

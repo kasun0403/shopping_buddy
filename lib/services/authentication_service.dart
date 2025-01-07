@@ -37,6 +37,17 @@ class AuthenticationService {
     }
   }
 
+  Future<User?> signUp(String email, String password) async {
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+              email: email.trim(), password: password.trim());
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      throw e.message ?? "An unknown error occurred.";
+    }
+  }
+
   Future<void> signOut() async {
     await GoogleSignIn().signOut();
     await _auth.signOut();

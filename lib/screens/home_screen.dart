@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +9,7 @@ import 'package:shopping_buddy/provider/authentication_provider.dart';
 import 'package:shopping_buddy/provider/firebase_provider.dart';
 import 'package:shopping_buddy/provider/hive_provider.dart';
 import 'package:shopping_buddy/screens/history_screen.dart';
+import 'package:shopping_buddy/utils/utill_functions.dart';
 import 'authentication/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -252,9 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         .groceryList;
                 Provider.of<FirebaseProvider>(context, listen: false)
                     .addGroceryItemList(context, groceryList);
-
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Your Item list Saved Permanently!')));
+                UtillFunctions().snackbar(
+                  "Your Item list Saved Permanently!",
+                  "",
+                );
               } else {
                 // Navigate to login screen if not logged in
                 Navigator.push(
@@ -362,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600),
                               ),
                               subtitle: Text(
-                                ("item quantity: ${hiveProvider.groceryList[index].count.toStringAsFixed(0)} ${hiveProvider.groceryList[index].measurement}"),
+                                ("item quantity: ${hiveProvider.groceryList[index].count.toStringAsFixed(2)} ${hiveProvider.groceryList[index].measurement}"),
                                 style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w600),
@@ -392,11 +393,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onTap: () {
                                         // Remove the item from the list
                                         hiveProvider.removeGroceryItem(index);
-                                        Get.snackbar(
-                                            "${hiveProvider.groceryList[index].name} Item Deleted",
-                                            "",
-                                            snackPosition:
-                                                SnackPosition.BOTTOM);
+                                        UtillFunctions().snackbar(
+                                          "${hiveProvider.groceryList[index].name} Item Deleted",
+                                          "",
+                                        );
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(5),
@@ -424,19 +424,6 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Container(
-              //   // width: 50,
-              //   decoration: BoxDecoration(
-              //       color: Colors.red,
-              //       borderRadius: BorderRadius.circular(100)),
-              //   padding: const EdgeInsets.all(8),
-              //   margin: const EdgeInsets.all(8.0),
-              //   child: const Icon(
-              //     Icons.history,
-              //     size: 30,
-              //     color: Colors.white,
-              //   ),
-              // ),
               Container(
                 width: MediaQuery.of(context).size.width / 3,
                 color: Colors.transparent,
@@ -459,10 +446,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    String title = "**Grocery List**".toUpperCase();
+                    String title = "*Grocery List*🛒".toUpperCase();
 
                     String grocery =
-                        "$title\n\n${goodList.map((item) => "${item.name} - items: ${item.count.toStringAsFixed(0)}").join('\n')}";
+                        "$title\n\n${goodList.map((item) => "🛍️ ${item.name} - ${item.count.toStringAsFixed(2)} ${item.measurement}").join('\n')}";
 
                     try {
                       ByteData byteData =

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shopping_buddy/models/grocery_item.dart';
 import 'package:shopping_buddy/provider/authentication_provider.dart';
 import 'package:shopping_buddy/provider/firebase_provider.dart';
+import 'package:shopping_buddy/provider/hive_provider.dart';
 import 'package:shopping_buddy/screens/authentication/login_screen.dart';
 import 'package:shopping_buddy/screens/history_data_screen.dart';
+import 'package:shopping_buddy/screens/home_screen.dart';
+import 'package:shopping_buddy/utils/utill_functions.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -58,6 +62,55 @@ class HistoryScreen extends StatelessWidget {
                         ],
                       );
                     } else if (snapshot.hasError) {
+                      if (snapshot.error is Exception) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('No history found.'),
+                              ElevatedButton(
+                                onPressed: () {
+                                  bool isLoggedIn =
+                                      Provider.of<AuthenticationProvider>(
+                                              context,
+                                              listen: false)
+                                          .isLoggedIn;
+                                  if (isLoggedIn) {
+                                    List<GroceryItem> groceryList =
+                                        Provider.of<GroceryProvider>(context,
+                                                listen: false)
+                                            .groceryList;
+                                    Provider.of<FirebaseProvider>(context,
+                                            listen: false)
+                                        .addGroceryItemList(
+                                            context, groceryList);
+                                    UtillFunctions().snackbar(
+                                      "Your Item list Saved Permanently!",
+                                      "",
+                                    );
+                                    Future.delayed(Duration.zero, () {
+                                      Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const HomeScreen()),
+                                          (Route<dynamic> route) => false);
+                                    });
+                                  } else {
+                                    // Navigate to login screen if not logged in
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const LoginScreen()));
+                                  }
+                                },
+                                child: Text('Save Data Permanently'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else if (snapshot.hasData && snapshot.data!.isEmpty) {
                       return const Center(child: Text('No history found.'));
